@@ -1,0 +1,69 @@
+@// Rythm template for the Chargeperiod Manager 
+@// see http://rythmengine.org/ for the syntax of this template
+@import java.text.SimpleDateFormat
+@import com.bitplan.evchargelog.ChargePeriodManager 
+@import com.bitplan.evchargelog.ChargePeriod 
+@import com.bitplan.datatypes.TypeConverter
+@import com.bitplan.datatypes.DefaultTypeConverter
+@args() { String title, String comment, String tooltip, ChargePeriod cp, int index; }@//args
+@include("base.rythm")
+@header(title,tooltip,comment)
+@{
+ String isoDateFormat="yyyy-MM-dd HH:mm";
+ TypeConverter tc=new DefaultTypeConverter();
+}
+  <div style='float:right'>
+  @if(cp.getUrl()!=null && cp.getUrl().contains("nonolet")) {
+   <img src='/charge/plot/range/@(cp.getFrom().format(isoDateFormat))/@(cp.getTo().format(isoDateFormat))/plot?channelnos=1;2;5;6;8'></td>
+  }
+  </div>
+  <form method='post'>
+	 <fieldset>
+       <legend><i class='mdi mdi-calendar'></i>Ladevorgang</legend>
+       <table>
+			<tr>
+				<td align='right'><label for="from">von:</label></td>
+				<td><input name='from' size='14' class='datetimepicker' value='@(cp.getFrom().format(isoDateFormat))'></td>
+			</tr>
+			<tr>
+				<td align='right'><label for="to">bis:</label></td>
+				<td><input name='to' size='14'  class='datetimepicker' value='@(cp.getTo().format(isoDateFormat))'></td>
+			</tr>
+		    <tr>
+				<td align='right'><label for="odo">km:</label></td>
+				<td><input name='odo' size='10' value='@(cp.getOdo().format("#"))'></td>
+			</tr>
+			<tr>
+				<td align='right'><label for="kWh">kwH:</label></td>
+				<td><input name='kWh' size='10' value='@(cp.getkWh().format("#.#"))'></td>
+			</tr>
+			<tr>
+				<td align='right'><label for="cost">Preis:</label></td>
+				<td><input name='cost' size='10' value='@(cp.getCost().format("#.##"))' EUR></td>
+			</tr>
+			<tr>
+				<td align='right'><label for="chargeMode">Modus:</label></td>
+				<td><input name='chargeMode' size='10' value='@(cp.getChargeMode())'></td>
+			</tr>
+			<tr>
+				<td align='right'><label for="amper">Ampere:</label></td>
+				<td><input name='ampere' size='10' value='@(cp.getAmpere().format("#"))'></td>
+			</tr>
+			<tr>
+				<td align='right'><label for="RR">RR:</label></td>
+				<td><input name='RR' size='10' value='@(cp.getRR().format("#"))'></td>
+			</tr>
+			<tr>
+				<td align='right'><label for="socStart">SOC:</label></td>
+				<td><input name='socStart' size='3'  value='@(cp.getSocStart().format("#"))'>%-<input name='socEnd' size='3' value='@(cp.getSocEnd().format("#"))'>%</td>
+			</tr>
+			<tr>
+				<td align='right'><label for="url">URL:</label></td>
+				<td><input name='url' size='60' value='@(cp.getUrl())'></td>
+			</tr>
+		</table>	
+		</fieldset>
+		<input type="submit" id="submit" value='eintragen'>
+	</form>
+	<div style="clear: both;"></div>
+@footer()

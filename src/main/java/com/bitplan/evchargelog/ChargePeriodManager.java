@@ -21,6 +21,7 @@
 package com.bitplan.evchargelog;
 
 import java.util.List;
+import java.util.Map;
 
 import com.bitplan.persistence.Manager;
 
@@ -33,4 +34,10 @@ public interface ChargePeriodManager extends Manager<ChargePeriodManager, Charge
   public void setPeriods(List<ChargePeriod> periods);
   public List<ChargePeriod> getPeriods();
   public void add(ChargePeriod period);
+  /**
+   * calculate Statistics
+   * 
+   * @return
+   */
+  public Map<String, Price> calcStatistics(String homeUrl);
 }

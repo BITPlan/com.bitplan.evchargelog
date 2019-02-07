@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ TestChargePeriods.class, TestRESTServer.class, TestRESTServer.class })
+@Suite.SuiteClasses({ TestChargePeriods.class, TestRESTServer.class })
 /**
  * Test suite
  * @author wf

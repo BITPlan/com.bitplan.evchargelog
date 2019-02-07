@@ -1,0 +1,11 @@
+@include("base.rythm")
+@args() { String title, String comment, String tooltip; }@//args
+@header(title,tooltip,comment)
+<br>
+<a href='/charge/chargeperiods/add'>Neuer Ladevorgang</a>
+<br>
+<br>
+<a href='/charge/chargeperiods'>Ladevorgangsliste</a>
+<br>
+<a href='/charge/stations'>Ladepunktliste</a>
+@footer()

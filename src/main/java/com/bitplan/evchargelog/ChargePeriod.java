@@ -79,6 +79,13 @@ public interface ChargePeriod {
   public void fromMap(MultivaluedMap<String, String> formParams);
 
   /**
+   * get the duration as Hours and Minutes
+   * 
+   * @return
+   */
+  public String asHoursAndMinutes();
+  
+  /**
    * return me as a String
    * 
    * @return

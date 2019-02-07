@@ -91,7 +91,7 @@ public class ChargePeriodManagerResource
     lcpm.getPeriods().add(newPeriod);
     lcpm.save();
     int index = lcpm.getElements().indexOf(newPeriod) + 1;
-    return redirect("chargeperiods/at/" + index);
+    return redirect(vin+"/chargeperiods/at/" + index);
   }
 
   @GET

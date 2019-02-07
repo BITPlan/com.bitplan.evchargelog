@@ -1,0 +1,95 @@
+@// Rythm template for the Chargeperiod Manager 
+@// seehttp://rythmengine.org/ for the syntax of this template 
+@import com.bitplan.evchargelog.ChargePeriodManager 
+@import com.bitplan.evchargelog.ChargePeriod 
+@import com.bitplan.evchargelog.Price
+@import com.bitplan.datatypes.TypeConverter
+@import com.bitplan.datatypes.DefaultTypeConverter
+@args() { String isoFrom, String isoTo, String title, String tooltip,
+String comment, String homeUrl,ChargePeriodManager cpm; }@//args 
+@include("base.rythm")
+@header(title,tooltip,comment) 
+@(isoFrom) - @(isoTo) 
+@{ 
+  int count=0;
+  TypeConverter tc=new DefaultTypeConverter(); 
+  double prevOdo=0;
+  cpm.sort();
+  List<ChargePeriod> periods=cpm.getPeriods();
+  Map<String,Price> stats=cpm.calcStatistics(homeUrl);
+  Price total=stats.get("total");
+  Price home=stats.get("home");
+  Price road=stats.get("road");
+}
+<table>
+  <tr>
+	<th>#</th>
+	<th>∑ km</th>
+	<th>∑ kWh</th>
+	<th>∑ Preis</th>
+	<th>EUR/100km</th>
+	<th>kWh/100km</th>
+  </tr>	
+	<tr>
+	  <th>total</th>
+	  <td>@total.getOdo()</td>
+	  <td>@total.getkWhSum().format("#0.0")</td>
+	  <td align='right'>@total.getEurSum().format("0.00 EUR")</td>
+	  <td align='right'>@((total.getEurSum()/total.getOdo()*100).format("#0.00 EUR"))</td>
+	  <td align='right'>@((total.getkWhSum()/total.getOdo()*100).format("#0.0"))</td>
+	</tr>
+	<tr>
+	   <th>road</th>
+	   <td>@road.getOdo()</td>
+	   <td>@road.getkWhSum().format("#0.0")</td>
+	   <td align='right'>@road.getEurSum().format("0.00 EUR")</td>
+	   <td align='right'>@((road.getEurSum()/road.getOdo()*100).format("#0.00 EUR"))</td>
+	   <td align='right'>@((road.getkWhSum()/road.getOdo()*100).format("#0.0"))</td>
+	   </tr>
+	<tr>
+		<th>home</th>
+		<td>@home.getOdo()</td>
+		<td>@home.getkWhSum().format("#0.0")</td>
+		<td align='right'>@home.getEurSum().format("0.00 EUR")</td>
+		<td align='right'>@((home.getEurSum()/home.getOdo()*100).format("#0.00 EUR"))</td>
+	    <td align='right'>@((home.getkWhSum()/home.getOdo()*100).format("#0.0"))</td>
+	</tr>
+</table>
+<br>
+<table>
+   <tr>
+	<th>#</th>
+	<th>∑ km</th>
+	<th>km</th>
+	<th>von</th>
+	<th>bis</th>
+	<th>dauer</th>
+	<th>chargeMode</th>
+	<th>kWh</th>
+	<th>Preis</th>
+	<th>url</th>
+	<th>❌</th>
+  </tr>	 
+	@for (ChargePeriod period:periods) {
+	<tr>
+	   @{
+	     double dist=period.getOdo();
+	     if (count+1 < periods.size()) {
+	     	dist=dist-periods.get(count+1).getOdo();
+	     }
+	   }
+		<td><a href='/charge/chargeperiods/at/@(++count)'>@(count)</a></td>
+		<td align='right'>@(period.getOdo())</td>
+		<td align='right'>@(dist)</td>
+		<td>@(period.getFromString())</td>
+		<td>@(period.getToString())</td>
+		<td align='right'>@(period.asHoursAndMinutes())</td>
+		<td>@(period.getChargeMode().toString())</td>  
+		<td align='right'>@(period.getkWh().format("#0.0"))</td>
+		<td align='right'>@(period.getCost().format("0.00")) EUR</td>
+		<td><a href='@(period.getUrl())'>@(period.getUrl())</a></td>
+		<td><a href='/charge/chargeperiods/delete/@(count)' class='confirmation'>❌</a></td>
+	</tr>
+	}
+</table>
+@footer()

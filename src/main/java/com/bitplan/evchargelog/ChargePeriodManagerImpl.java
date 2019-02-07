@@ -21,6 +21,7 @@
 package com.bitplan.evchargelog;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -52,7 +54,7 @@ public class ChargePeriodManagerImpl
   List<ChargePeriod> periods = new ArrayList<ChargePeriod>();
 
   @XmlElementWrapper(name = "periods")
-  @XmlElement(name = "chargeperiod", type=ChargePeriodImpl.class)
+  @XmlElement(name = "chargeperiod", type = ChargePeriodImpl.class)
   public List<ChargePeriod> getPeriods() {
     return periods;
   }
@@ -62,12 +64,12 @@ public class ChargePeriodManagerImpl
   }
 
   public ChargePeriodManagerImpl() {
-    instance = this;
   }
 
   public static JaxbFactoryApi<ChargePeriodManager> getFactoryStatic() {
     if (factory == null) {
-      factory = new JaxbFactory<ChargePeriodManager>(ChargePeriodManagerImpl.class);
+      factory = new JaxbFactory<ChargePeriodManager>(
+          ChargePeriodManagerImpl.class);
     }
     return factory;
   }
@@ -88,6 +90,7 @@ public class ChargePeriodManagerImpl
 
   /**
    * load me from the given xmlPath
+   * 
    * @param xmlPath
    * @return return a ChargePeriodManager
    * @throws Exception
@@ -185,32 +188,41 @@ public class ChargePeriodManagerImpl
     return stats;
   }
 
-  private static ChargePeriodManager instance;
-
   /**
-   * get the path for the given vin
+   * get the xmlFile for the given vin
+   * if it does not exist initialize it
+   * 
    * @param vin
-   * @return the path
+   * @return the file
    */
-  public static String getXmlPath(String vin) {
-    String xmlPath = System.getProperty("user.home")
-      + java.io.File.separator + ".evchargelog"+File.separator+vin+".xml";
-    return xmlPath;
+  public static File getXmlFile(String vin) {
+    String xmlPath = System.getProperty("user.home") + java.io.File.separator
+        + ".evchargelog" + File.separator + "ChargePeriods_"+vin + ".xml";
+    File xmlFile=new File(xmlPath);
+    if (!xmlFile.exists()) {
+      xmlFile.getParentFile().mkdirs();
+      ChargePeriodManager empty=new ChargePeriodManagerImpl();
+      try {
+        FileUtils.write(xmlFile,empty.asXML(),"UTF-8");
+      } catch (IOException | JAXBException e) {
+        LOGGER.log(Level.WARNING, e.getMessage(),e);
+      }
+    }
+    return xmlFile;
   }
 
-      
   /**
    * get the Instance for the given vehicle identification
    * 
    * @return the instance
    */
   public static ChargePeriodManager getInstance(String vin) {
-    if (instance == null)
-      try {
-        instance = load(getXmlPath(vin));
-      } catch (Exception e) {
-        handle(e);
-      }
+    ChargePeriodManager instance = null;
+    try {
+      instance = load(getXmlFile(vin));
+    } catch (Exception e) {
+      handle(e);
+    }
     return instance;
   }
 

@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -60,10 +59,8 @@ public class TestRESTServer extends TestEVChargeLogServer {
     formData.put("socEnd", "80");
     formData.put("url","http://www.chargeit.com");
     String vin="WAUEH74F97N170230";
-    String xmlPath = ChargePeriodManagerImpl.getXmlPath(vin);
-    File xmlFile=new File(xmlPath);
-    ChargePeriodManager empty=new ChargePeriodManagerImpl();
-    FileUtils.write(xmlFile,empty.asXML(),"UTF-8");
+    File xmlFile= ChargePeriodManagerImpl.getXmlFile(vin);
+    xmlFile.delete();
     ChargePeriodManager cpm=ChargePeriodManagerImpl.getInstance(vin);
     assertNotNull("chargperiods for vin "+vin+" should be loadable",cpm);
     int prevSize = cpm.getPeriods()
