@@ -17,7 +17,7 @@
 		<!-- for parent pom to work -->
 		<github.project>com.bitplan.evchargelog</github.project>
 		<!-- for README.md generation -->
-		<documentation.wiki>y</documentation.wiki>
+		<documentation.wiki>http://wiki.bitplan.com/index.php/EVChargeLog</documentation.wiki>
 		<!-- versions of other libraries to be used -->
 	</properties>
 	<dependencies>
