@@ -1,0 +1,53 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.bitplan.pom</groupId>
+		<artifactId>com.bitplan.pom</artifactId>
+		<version>0.0.23</version>
+		<relativePath>../com.bitplan.pom/pom.xml</relativePath>
+	</parent>
+	<groupId>com.bitplan.evchargelog</groupId>
+	<artifactId>com.bitplan.evchargelog</artifactId>
+	<version>0.0.1</version>
+	<name>EVChargeLog</name>
+	<description>Electric Vehicle Charging Log</description>
+	<properties>
+		<!-- for parent pom to work -->
+		<github.project>com.bitplan.evchargelog</github.project>
+		<!-- for README.md generation -->
+		<documentation.wiki>y</documentation.wiki>
+		<!-- versions of other libraries to be used -->
+	</properties>
+	<dependencies>
+		<!-- Junit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-all</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<!-- Jersey base framework with tests for it -->
+		<dependency>
+			<groupId>com.bitplan.rest</groupId>
+			<artifactId>com.bitplan.simplerest</artifactId>
+			<version>0.0.19</version>
+		</dependency>
+		<dependency>
+			<groupId>com.bitplan.rest</groupId>
+			<artifactId>com.bitplan.simplerest</artifactId>
+			<version>0.0.19</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.bitplan.rest</groupId>
+			<artifactId>com.bitplan.simplerest-api</artifactId>
+			<version>0.0.8</version>
+		</dependency>
+	</dependencies>
+</project>
