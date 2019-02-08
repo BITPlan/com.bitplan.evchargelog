@@ -21,19 +21,14 @@
 package com.bitplan.evchargelog;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -148,18 +143,6 @@ public class ChargePeriodManagerImpl
     return getFactoryStatic();
   }
 
-  /***
-   * handle the given Throwable
-   * 
-   * @param th
-   */
-  private static void handle(Throwable th) {
-    LOGGER.log(Level.WARNING, "Error: " + th.getMessage());
-    StringWriter sw = new StringWriter();
-    new Throwable().printStackTrace(new PrintWriter(sw));
-    LOGGER.log(Level.WARNING, "Stacktrace: " + sw.toString());
-  }
-
   /**
    * calculate Statistics
    * 
@@ -196,18 +179,7 @@ public class ChargePeriodManagerImpl
    * @return the file
    */
   public static File getXmlFile(String vin) {
-    String xmlPath = System.getProperty("user.home") + java.io.File.separator
-        + ".evchargelog" + File.separator + "ChargePeriods_"+vin + ".xml";
-    File xmlFile=new File(xmlPath);
-    if (!xmlFile.exists()) {
-      xmlFile.getParentFile().mkdirs();
-      ChargePeriodManager empty=new ChargePeriodManagerImpl();
-      try {
-        FileUtils.write(xmlFile,empty.asXML(),"UTF-8");
-      } catch (IOException | JAXBException e) {
-        LOGGER.log(Level.WARNING, e.getMessage(),e);
-      }
-    }
+    File xmlFile=XMLStorage.getXmlFile("ChargePeriods","ChargePeriods_%s", vin);
     return xmlFile;
   }
 
@@ -221,7 +193,7 @@ public class ChargePeriodManagerImpl
     try {
       instance = load(getXmlFile(vin));
     } catch (Exception e) {
-      handle(e);
+      ErrorHandler.handle(e);
     }
     return instance;
   }

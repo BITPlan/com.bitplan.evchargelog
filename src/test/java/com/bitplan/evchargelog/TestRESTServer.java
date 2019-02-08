@@ -33,6 +33,8 @@ import org.junit.Test;
 
 import com.bitplan.datatypes.DefaultTypeConverter;
 import com.bitplan.datatypes.TypeConverter;
+import com.bitplan.rest.User;
+import com.bitplan.rest.users.UserImpl;
 import com.sun.jersey.api.client.ClientResponse;
 
 /**
@@ -47,9 +49,38 @@ public class TestRESTServer extends TestEVChargeLogServer {
     TypeConverter tc=new DefaultTypeConverter();
     assertEquals("-",tc.nullValue(null));
   }
+  
+  /**
+   * get exampleUser
+   * @return
+   * @throws Exception 
+   */
+  public static User getExampleUserScott() throws Exception {
+    UserManagerImpl.cleanTestMode();
+    UserManagerImpl um=UserManagerImpl.getInstance();
+    User user=new UserImpl(um,"scott","Scott","Bruce","scott@tiger.com","tiger","CEO","since 2016-01");
+    um.add(user);
+    um.save();
+    return user;
+  }
+  
+  public void setUpExampleUser() throws Exception {
+    // debug=true;
+    User user=getExampleUserScott();
+    // we need the unencrypted password here
+    user.setPassword("tiger");
+    setUser(user);
+  }
+  
+  @Test
+  public void testBasicAuth() throws Exception {
+    setUpExampleUser();
+    super.check("/charge/home", "Home");
+  }
 
   @Test
   public void testPost() throws Exception {
+    setUpExampleUser();
     Map<String, String> formData = new HashMap<String, String>();
     formData.put("odo", "1925");
     formData.put("cost", "2,25");
@@ -62,11 +93,11 @@ public class TestRESTServer extends TestEVChargeLogServer {
     File xmlFile= ChargePeriodManagerImpl.getXmlFile(vin);
     xmlFile.delete();
     ChargePeriodManager cpm=ChargePeriodManagerImpl.getInstance(vin);
-    assertNotNull("chargperiods for vin "+vin+" should be loadable",cpm);
+    assertNotNull("chargeperiods for vin "+vin+" should be loadable",cpm);
     int prevSize = cpm.getPeriods()
         .size();
     ClientResponse response = super.getPostResponse(
-        "/charge/"+vin+"/chargeperiods/add", formData, debug);
+        "/charge/chargeperiods/add", formData, debug);
     assertEquals(200, response.getStatus());
     List<ChargePeriod> periods = cpm.getPeriods();
     assertEquals(prevSize + 1, periods.size());

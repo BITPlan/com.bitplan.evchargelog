@@ -20,17 +20,29 @@
  */
 package com.bitplan.evchargelog;
 
-import org.junit.runner.RunWith;
-import org.junit.runners.Suite;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-@RunWith(Suite.class)
-@Suite.SuiteClasses({ TestUsers.class,TestChargePeriods.class, TestRESTServer.class })
 /**
- * Test suite
+ * Generic Error Handler
  * @author wf
  *
  */
-public class TestSuite {
+public class ErrorHandler {
+  
+  protected static Logger LOGGER = Logger.getLogger("com.bitplan.evchargelog");
 
-
+  /***
+   * handle the given Throwable
+   * 
+   * @param th
+   */
+  public static void handle(Throwable th) {
+    LOGGER.log(Level.WARNING, "Error: " + th.getMessage());
+    StringWriter sw = new StringWriter();
+    new Throwable().printStackTrace(new PrintWriter(sw));
+    LOGGER.log(Level.WARNING, "Stacktrace: " + sw.toString());
+  }
 }

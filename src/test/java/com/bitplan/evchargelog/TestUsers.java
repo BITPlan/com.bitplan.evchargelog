@@ -21,13 +21,13 @@
 package com.bitplan.evchargelog;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 import com.bitplan.rest.User;
-import com.bitplan.rest.UserManager;
 import com.bitplan.rest.users.UserImpl;
-import com.bitplan.rest.users.UserManagerImpl;
+
 
 /**
  * test the user handling from the base rest implementation
@@ -36,24 +36,35 @@ import com.bitplan.rest.users.UserManagerImpl;
  */
 public class TestUsers {
 
+  public boolean debug=false;
+  
   @Test
   public void testUser() throws Exception {
-    UserManager um=UserManagerImpl.getInstance();
+    UserManagerImpl.cleanTestMode();
+    UserManagerImpl um=UserManagerImpl.getInstance();
+    assertTrue(um.getXmlFile().getName().contains("_test"));
+    um=UserManagerImpl.getInstance();
     User u=new UserImpl();
+    u.setId("1");
     u.setName("Doe");
     u.setFirstname("John");
     um.add(u);
     String xml=um.asXML();
-    // System.out.println(xml);
+    if (debug)
+    System.out.println(xml);
     assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
-        "<UserManager>\n" + 
+        "<EVChargeLogUsers>\n" + 
         "   <users>\n" + 
         "      <User>\n" + 
         "         <firstname>John</firstname>\n" + 
+        "         <id>1</id>\n" + 
         "         <name>Doe</name>\n" + 
         "      </User>\n" + 
         "   </users>\n" + 
-        "</UserManager>\n",xml);
+        "</EVChargeLogUsers>\n",xml);
+    um.save();
+    UserManagerImpl um2 = UserManagerImpl.getInstance();
+    assertEquals(1,um2.getUsers().size());
   }
 
 }

@@ -20,6 +20,7 @@
  */
 package com.bitplan.evchargelog.resources;
 
+import java.security.Principal;
 import java.util.Date;
 
 import javax.ws.rs.Consumes;
@@ -28,9 +29,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.SecurityContext;
 
 import com.bitplan.evchargelog.ChargePeriod;
 import com.bitplan.evchargelog.ChargePeriodImpl;
@@ -40,16 +43,21 @@ import com.bitplan.evchargelog.ChargePeriodManagerImpl;
 /**
  * Jersey Resource for ChargePeriodManager
  */
-@Path("{vin}/chargeperiods")
+@Path("/chargeperiods")
 public class ChargePeriodManagerResource
     extends EVChargeLogManagerResource<ChargePeriodManager, ChargePeriod> {
-
+  @Context SecurityContext sc;
   /**
    * create this resource
    * 
    * @throws Exception
    */
   public ChargePeriodManagerResource() throws Exception {
+    if (sc!=null) {
+      Principal principal = sc.getUserPrincipal();
+      String vin=principal.getName();
+      initManager(vin);
+    }
     setTemplate("chargePeriod.rythm");
     setElementName("cp");
     prepareRootMap("Ladevorgänge");
@@ -69,8 +77,7 @@ public class ChargePeriodManagerResource
 
   @GET
   @Path("add")
-  public Response addPeriod(@PathParam("vin") String vin) {
-    initManager(vin);
+  public Response addPeriod() {;
     ChargePeriod newPeriod = new ChargePeriodImpl();
     newPeriod.setFrom(new Date());
     newPeriod.setTo(new Date());
@@ -83,15 +90,14 @@ public class ChargePeriodManagerResource
   @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
   @Produces({ "text/html" })
   @Path("add")
-  public Response addPeriodFromPost(@PathParam("vin") String vin,
-      MultivaluedMap<String, String> formParams) throws Exception {
-    ChargePeriodManager lcpm=initManager(vin);
+  public Response addPeriodFromPost(MultivaluedMap<String, String> formParams) throws Exception {
+    ChargePeriodManager lcpm=getManager();
     ChargePeriod newPeriod = new ChargePeriodImpl();
     newPeriod.fromMap(formParams);
     lcpm.getPeriods().add(newPeriod);
     lcpm.save();
     int index = lcpm.getElements().indexOf(newPeriod) + 1;
-    return redirect(vin+"/chargeperiods/at/" + index);
+    return redirect("/chargeperiods/at/" + index);
   }
 
   @GET
@@ -109,9 +115,9 @@ public class ChargePeriodManagerResource
   @POST
   @Produces({ MediaType.TEXT_HTML })
   @Path("at/{index}")
-  public Response postChanges(@PathParam("vin") String vin,@PathParam("index") Integer index,
+  public Response postChanges(@PathParam("index") Integer index,
       MultivaluedMap<String, String> formParams) throws Exception {
-    ChargePeriodManager lcpm = initManager(vin);
+    ChargePeriodManager lcpm = getManager();
     ChargePeriod period = lcpm.getElements().get(index - 1);
     period.fromMap(formParams);
     lcpm.save();

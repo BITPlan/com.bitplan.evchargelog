@@ -38,6 +38,7 @@ public class TestEVChargeLogServer extends TestRestServer {
 
   @Override
   public RestServer createServer() throws Exception {
+    UserManagerImpl.testMode=true;
     RestServer result = new EVChargeLogServer();
     return result;
   }

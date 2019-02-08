@@ -20,8 +20,6 @@
  */
 package com.bitplan.evchargelog.resources;
 
-import com.bitplan.evchargelog.ChargePeriodManager;
-import com.bitplan.evchargelog.ChargePeriodManagerImpl;
 import com.bitplan.persistence.Manager;
 import com.bitplan.rest.resources.BaseManagerResource;
 

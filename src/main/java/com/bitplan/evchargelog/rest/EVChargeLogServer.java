@@ -23,8 +23,9 @@ package com.bitplan.evchargelog.rest;
 import com.bitplan.evchargelog.ChargePeriodImpl;
 import com.bitplan.evchargelog.ChargePeriodManagerImpl;
 import com.bitplan.rest.RestServerImpl;
+import com.bitplan.rest.UserManager;
 import com.bitplan.rest.providers.JsonProvider;
-import com.bitplan.rest.users.UserManagerImpl;
+import com.bitplan.evchargelog.UserManagerImpl;
 
 /**
  * RESTful Server for EVChargeLog
@@ -48,6 +49,9 @@ public class EVChargeLogServer extends RestServerImpl{
     JsonProvider.registerType(ChargePeriodImpl.class);
 	
     settings.setPackages(packages);
+    
+    UserManager um=UserManagerImpl.getInstance();
+    settings.setUserManager(um);
   }       
        
   /**
