@@ -20,10 +20,15 @@
  */
 package com.bitplan.evchargelog.resources;
 
+import java.security.Principal;
 import java.util.Map;
+
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.SecurityContext;
 
 import com.bitplan.persistence.Manager;
 import com.bitplan.rest.resources.BaseResource;
+import com.bitplan.rest.resources.TemplateResource;
 
 /**
  * base class for NonOlet content
@@ -33,7 +38,13 @@ import com.bitplan.rest.resources.BaseResource;
  * @param <T>
  */
 public class EVChargeLogResource <MT extends Manager<MT,T>,T> extends BaseResource<MT,T> {
-
+ 
+  public static Principal currentUser;
+  
+  public static void setDebug(boolean debug) {
+    TemplateResource.debug=debug;
+  }
+  
   /**
    * prepare the root Map
    * @param title

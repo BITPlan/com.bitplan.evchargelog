@@ -56,6 +56,8 @@ public interface ChargePeriod {
   public void setSocEnd(double socEnd);
   public Double getkWh();
   public void setkWh(Double kWh);
+  public Double getRR();
+  public void setRR(Double rR);
   public String getUrl();
   public void setUrl(String url);
   public Double calcKWhours();

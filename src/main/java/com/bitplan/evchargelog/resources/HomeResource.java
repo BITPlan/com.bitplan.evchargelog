@@ -30,7 +30,7 @@ import javax.ws.rs.core.Response;
 @SuppressWarnings("rawtypes")
 @Path("/home")
 public class HomeResource extends EVChargeLogResource {
-
+ 
   /**
    * constructor
    */
@@ -40,6 +40,7 @@ public class HomeResource extends EVChargeLogResource {
 
   @GET
   public Response showHome() {
+    super.getPrincipal();
     Response response = super.templateResponse("home.rythm");
     return response;
   }

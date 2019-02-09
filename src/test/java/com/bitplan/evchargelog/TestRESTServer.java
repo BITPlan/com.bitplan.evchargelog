@@ -33,6 +33,7 @@ import org.junit.Test;
 
 import com.bitplan.datatypes.DefaultTypeConverter;
 import com.bitplan.datatypes.TypeConverter;
+import com.bitplan.evchargelog.resources.EVChargeLogResource;
 import com.bitplan.rest.User;
 import com.bitplan.rest.users.UserImpl;
 import com.sun.jersey.api.client.ClientResponse;
@@ -70,6 +71,7 @@ public class TestRESTServer extends TestEVChargeLogServer {
     // we need the unencrypted password here
     user.setPassword("tiger");
     setUser(user);
+    EVChargeLogResource.setDebug(true);
   }
   
   @Test

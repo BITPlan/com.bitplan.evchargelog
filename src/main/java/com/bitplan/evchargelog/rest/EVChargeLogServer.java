@@ -43,7 +43,7 @@ public class EVChargeLogServer extends RestServerImpl{
     settings.setContextPath("/charge".toLowerCase());
     settings.addClassPathHandler("/", "/static/");
     super.useFastJson=false;
-    String packages="com.bitplan.evchargelog.resources;com.bitplan.nonolet.rest;com.bitplan.vzjava.resources;com.bitplan.rest.providers";
+    String packages="com.bitplan.evchargelog.resources;com.bitplan.evchargelog.rest;com.bitplan.vzjava.resources;com.bitplan.rest.providers";
     JsonProvider.registerType(UserManagerImpl.class);
     JsonProvider.registerType(ChargePeriodManagerImpl.class);
     JsonProvider.registerType(ChargePeriodImpl.class);
