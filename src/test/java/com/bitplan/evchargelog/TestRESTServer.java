@@ -100,7 +100,7 @@ public class TestRESTServer extends TestEVChargeLogServer {
     xmlFile.delete();
     Map<String, String> formData = new HashMap<String, String>();
     formData.put("odo", "1925");
-    formData.put("cost", "2,25");
+    formData.put("cost", String.format("%.2f", 2.25));
     formData.put("from", "2017-03-18 19:25");
     formData.put("to", "2017-03-18 20:25");
     formData.put("socStart", "33");
