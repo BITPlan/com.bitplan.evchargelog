@@ -23,9 +23,6 @@ package com.bitplan.evchargelog.resources;
 import java.security.Principal;
 import java.util.Map;
 
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.SecurityContext;
-
 import com.bitplan.persistence.Manager;
 import com.bitplan.rest.resources.BaseResource;
 import com.bitplan.rest.resources.TemplateResource;

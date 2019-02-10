@@ -35,19 +35,19 @@
 		<dependency>
 			<groupId>com.bitplan.rest</groupId>
 			<artifactId>com.bitplan.simplerest</artifactId>
-			<version>0.0.22</version>
+			<version>0.0.23</version>
 		</dependency>
 		<dependency>
 			<groupId>com.bitplan.rest</groupId>
 			<artifactId>com.bitplan.simplerest</artifactId>
-			<version>0.0.22</version>
+			<version>0.0.23</version>
 			<type>test-jar</type>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.bitplan.rest</groupId>
 			<artifactId>com.bitplan.simplerest-api</artifactId>
-			<version>0.0.8</version>
+			<version>0.0.9</version>
 		</dependency>
 	</dependencies>
 </project>

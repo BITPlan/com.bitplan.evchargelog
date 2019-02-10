@@ -19,11 +19,15 @@
  * limitations under the License.
  */
 package com.bitplan.evchargelog;
+
+import org.junit.After;
 import org.junit.Before;
 
 import com.bitplan.evchargelog.rest.EVChargeLogServer;
 import com.bitplan.rest.RestServer;
+import com.bitplan.rest.User;
 import com.bitplan.rest.test.TestRestServer;
+import com.bitplan.rest.users.UserImpl;
 
 /**
  * test the EVChargeLog RESTFul server
@@ -31,15 +35,35 @@ import com.bitplan.rest.test.TestRestServer;
  *
  */
 public class TestEVChargeLogServer extends TestRestServer {
+  private static UserManagerImpl um;
+  
   @Before
   public void initServer() throws Exception {
     startServer();
+  }
+  
+  @After
+  public void tearDownServer() throws Exception {
+    stopServer();
   }
 
   @Override
   public RestServer createServer() throws Exception {
     UserManagerImpl.testMode=true;
+    if (um == null) {
+      UserManagerImpl.cleanTestMode();
+      um = UserManagerImpl.getInstance();
+      User user = new UserImpl(um, "scott", "Scott", "Bruce", "scott@tiger.com",
+          "tiger", "CEO", "since 2016-01");
+      um.add(user);
+      User vehicle = new UserImpl(um, "WAUEH74F97N170230", "Vehicle",
+          "sample", "sample@vehicle.com", "leopard", "Vehicle",
+          "since 2019-02");
+      um.add(vehicle);
+      um.save();
+    }
     RestServer result = new EVChargeLogServer();
+    result.getSettings().setUserManager(um);
     return result;
   }
   

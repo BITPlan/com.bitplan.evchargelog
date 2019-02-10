@@ -83,9 +83,7 @@ public class ChargePeriodManagerResource
     ChargePeriod newPeriod = new ChargePeriodImpl();
     newPeriod.setFrom(new Date());
     newPeriod.setTo(new Date());
-    rootMap.put("cp", newPeriod);
-    Response response = super.templateResponse("chargePeriod.rythm");
-    return response;
+    return this.getPeriod(newPeriod);
   }
 
   @POST
@@ -100,6 +98,7 @@ public class ChargePeriodManagerResource
     lcpm.getPeriods().add(newPeriod);
     lcpm.save();
     int index = lcpm.getElements().indexOf(newPeriod) + 1;
+    //return redirect("hello/echo/"+index);
     return redirect("chargeperiods/at/" + index);
   }
 
@@ -114,7 +113,7 @@ public class ChargePeriodManagerResource
     Response response = super.templateResponse("chargePeriods.rythm");
     return response;
   }
-
+  
   @POST
   @Produces({ MediaType.TEXT_HTML })
   @Path("at/{index}")
@@ -124,10 +123,20 @@ public class ChargePeriodManagerResource
     ChargePeriod period = lcpm.getElements().get(index - 1);
     period.fromMap(formParams);
     lcpm.save();
+    return getPeriod(period);
+  }
+
+  /**
+   * return the given period's response
+   * @param period
+   * @return the period
+   */
+  public Response getPeriod(ChargePeriod period) {  
     rootMap.put("cp", period);
     Response response = super.templateResponse("chargePeriod.rythm");
     return response;
   }
+
 
   @GET
   @Path("range/{isoFrom}/{isoTo}")
