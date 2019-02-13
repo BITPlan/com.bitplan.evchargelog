@@ -28,6 +28,9 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.net.URL;
 import java.util.Locale;
+import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,7 +38,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Test;
@@ -58,12 +60,12 @@ public class TestChargingStations {
   ExcelSystem baExcelSystem = null;
 
   /**
-   * get the Excel File for ChargingStations
+   * get the Excel File from BundesNetzAgentur
    * 
-   * @return
+   * @return the file
    * @throws Exception
    */
-  public ExcelSystem getBundesnetzAgenturChargingStations() throws Exception {
+  protected File getLadesaeulenkarteDatenbankauszug() throws Exception {
     // The original file has some superfluous sheets and the title row is not
     // in the first line so we downloaded and adapted it a bit to avoid to do
     // this in software e.g.
@@ -71,7 +73,7 @@ public class TestChargingStations {
     // https://stackoverflow.com/questions/1834971/removing-a-row-from-an-excel-sheet-with-apache-poi-hssf
     String url = "https://www.bundesnetzagentur.de/SharedDocs/Downloads/DE/Sachgebiete/Energie/Unternehmen_Institutionen/HandelundVertrieb/Ladesaeulen/Ladesaeulenkarte_Datenbankauszug20.xlsx?__blob=publicationFile&v=2";
     Excel excel = new Excel(url);
-    assertNotNull("Download from "+url,excel.workbook);
+    assertNotNull("Download from " + url, excel.workbook);
     excel.workbook.removeSheetAt(2);
     excel.workbook.removeSheetAt(1);
     assertEquals(1, excel.getSheets().size());
@@ -105,6 +107,21 @@ public class TestChargingStations {
     File excelFile = File.createTempFile("Ladesaeulenkarte_Datenbankauszug20",
         ".xlsx");
     excel.save(excelFile.getPath());
+    return excelFile;
+  }
+
+  /**
+   * get the Excel File for ChargingStations
+   * 
+   * @return
+   * @throws Exception
+   */
+  public ExcelSystem getBundesnetzAgenturChargingStations() throws Exception {
+    // File excelFile=this.getLadesaeulenkarteDatenbankauszug();
+    // work around quite a few issues with Apache POI and the original file by
+    // manually fixing and using the cached version
+    File excelFile = new File(
+        "src/test/data/Ladesaeulenkarte_Datenbankauszug20.xlsx");
     if (baExcelSystem == null) {
       baExcelSystem = new ExcelSystem();
       baExcelSystem.connect();
@@ -116,34 +133,22 @@ public class TestChargingStations {
   }
 
   /**
-   * test reading the list of registered german charging stations from
-   * Bundesnetzagentur
-   * 
-   * @throws Exception
-   */
-  @Test
-  public void testBundesnetzagentur() throws Exception {
-    ExcelSystem es = this.getBundesnetzAgenturChargingStations();
-    long count = es.g().V().count().next().longValue();
-    // actually there are only 7733 but we have to work around
-    // https://bz.apache.org/bugzilla/show_bug.cgi?id=62711
-    assertEquals(7737, count);
-    es.g().V().has("row").forEachRemaining(v -> {
-      Station station = this.fromBundesNetzagentur(v);
-      showStation(station);
-    });
-  }
-
-  /**
    * show the given station
    * 
    * @param station
    */
   public void showStation(Station station) {
     if (station.getCountry() != null)
-      System.out.println(String.format("%2s-%5s %25s %30s %.4f %.4f",
-          station.getCountry(), station.getZip(), station.getCity(),
-          station.getAddress(), station.getLat(), station.getLon()));
+      System.out
+          .println(String.format("%2s-%5s %-15s %-15s %-20s %.4f %.4f%s%s",
+              station.getCountry(), station.getZip(), station.getCity(),
+              station.getName() == null
+                  ? (station.getOperator() == null ? "" : station.getOperator())
+                  : station.getName(),
+              station.getAddress(), station.getLat(), station.getLon(),
+              station.getUrl() == null ? "" : "\n\t" + station.getUrl(),
+              station.getComment() == null ? ""
+                  : "\n\t" + station.getComment()));
   }
 
   /**
@@ -164,7 +169,7 @@ public class TestChargingStations {
       String city = value.toString();
       String[] ziploc = value.toString().split(" ");
       if (ziploc.length >= 2) {
-        station.setZip(ziploc[0]);
+        station.setZip(ziploc[0].trim());
         station.setCity(city.substring(ziploc[0].length()).trim());
         station.setCountry("DE");
       } else {
@@ -181,8 +186,15 @@ public class TestChargingStations {
   }
 
   class OpenChargeMapResult {
-    Double distance;
-    Station station;
+    SortedMap<Double, Station> stations;
+
+    public double closestDistance() {
+      return stations.firstKey();
+    }
+
+    public Station closestStation() {
+      return stations.get(stations.firstKey());
+    }
   }
 
   /**
@@ -192,23 +204,65 @@ public class TestChargingStations {
    *          - station vertex
    * @return the com.bitplan.evchargelog.Station
    */
-  public OpenChargeMapResult fromOpenChargeMap(Vertex sv) {
-    OpenChargeMapResult result = new OpenChargeMapResult();
+  public Station fromOpenChargeMap(Vertex sv) {
+    if (debug)
+      SimpleNode.printDebug.accept(sv);
     Station station = new StationImpl();
+    sv.property("Title").ifPresent(value -> station.setName(value.toString()));
     sv.property("Latitude")
         .ifPresent(value -> station.setLat(((Number) value).doubleValue()));
     sv.property("Longitude")
         .ifPresent(value -> station.setLon(((Number) value).doubleValue()));
     sv.property("Postcode")
         .ifPresent(value -> station.setZip(value.toString()));
-    sv.property("Town").ifPresent(value -> station.setCity(value.toString()));
+    sv.property("Town").ifPresent(value -> station.setCity(value.toString().trim()));
     sv.property("AddressLine1")
         .ifPresent(value -> station.setAddress(value.toString()));
-
-    result.station = station;
-    sv.property("Distance")
-        .ifPresent(value -> result.distance = ((Number) value).doubleValue());
-    return result;
+    sv.property("RelatedURL")
+        .ifPresent(value -> station.setUrl(value.toString()));
+    sv.property("AccessComments")
+        .ifPresent(value -> station.setComment(value.toString()));
+    sv.property("CountryID").ifPresent(value -> {
+      String country = "?";
+      switch (((Number) value).intValue()) {
+      case 1:
+        country = "GB";
+        break;
+      case 2:
+        country = "US";
+        break;
+      case 3:
+        country = "IE";
+        break;
+      case 4:
+        country = "HK";
+        break;
+      case 7:
+        country = "AL";
+        break;
+      case 44:
+        country = "CA";
+        break;
+      case 70:
+        country = "EG";
+      case 80:
+        country = "FR";
+        break;
+      case 87:
+        country = "DE";
+        break;
+      case 112:
+        country = "IT";
+        break;
+      case 159:
+        country = "NL";
+        break;
+      case 168:
+        country = "NO";
+      }
+      station.setCountry(country);
+    });
+    return station;
   }
 
   /**
@@ -217,13 +271,12 @@ public class TestChargingStations {
    * 
    * @param lat
    * @param lon
+   * @param maxresults 
    * @return the Station
    */
-  public OpenChargeMapResult closestOpenChargeMap(Double lat, Double lon) {
-    // number of stations nearby to get from open chargemap api
-    int maxresults = 3;
+  public OpenChargeMapResult closestOpenChargeMap(Double lat, Double lon, int maxresults) {
     String apiUrl = String.format(Locale.ENGLISH,
-        "http://api.openchargemap.io/v3/poi/?output=json&latitude=%.4f8&longitude=%.4f&maxresults=10",
+        "http://api.openchargemap.io/v3/poi/?output=json&latitude=%.4f8&longitude=%.4f&maxresults=%d",
         lat, lon, maxresults);
     JsonSystem js = new JsonSystem();
     try {
@@ -233,11 +286,15 @@ public class TestChargingStations {
     }
     js.moveTo(apiUrl);
 
-    GraphTraversal<Vertex, Vertex> addressesByDistance = js.g().V()
-        .hasLabel("AddressInfo").order().by("Distance");
-    assertTrue(addressesByDistance.hasNext());
-    Vertex av = addressesByDistance.next();
-    OpenChargeMapResult result = this.fromOpenChargeMap(av);
+    OpenChargeMapResult result = new OpenChargeMapResult();
+    result.stations = new TreeMap<Double, Station>();
+    js.g().V().hasLabel("AddressInfo").order().by("Distance")
+        .forEachRemaining(sv -> {
+          sv.property("Distance").ifPresent(value -> {
+            double distance = ((Number) value).doubleValue();
+            result.stations.put(distance, this.fromOpenChargeMap(sv));
+          });
+        });
     return result;
   }
 
@@ -260,36 +317,131 @@ public class TestChargingStations {
     return station;
   }
 
+  /**
+   * test reading the list of registered german charging stations from
+   * Bundesnetzagentur
+   * 
+   * @throws Exception
+   */
   @Test
-  public void testConvertToOpenChargeMap() throws Exception {
+  public void testBundesnetzagentur() throws Exception {
     ExcelSystem es = this.getBundesnetzAgenturChargingStations();
+    long count = es.g().V().count().next().longValue();
+    // actually there are only 7733 but we might have to work around
+    // https://bz.apache.org/bugzilla/show_bug.cgi?id=62711
+    assertEquals(7733, count);
     es.g().V().has("row").forEachRemaining(v -> {
-      if (v.property("Betreiber").isPresent()) {
-        Station station = this.fromBundesNetzagentur(v);
-        showStation(station);
-      }
+      Station station = this.fromBundesNetzagentur(v);
+      showStation(station);
     });
+  }
+
+  class TestLocation {
+    public TestLocation(double lat, double lon, String country, String name) {
+      super();
+      this.lat = lat;
+      this.lon = lon;
+      this.country = country;
+      this.name = name;
+    }
+
+    double lat;
+    double lon;
+    String country;
+    String name;
   }
 
   @Test
   public void testOpenChargeMapApi() throws Exception {
-    OpenChargeMapResult result = closestOpenChargeMap(51.219, 6.634);
-    showStation(result.station);
+    TestLocation locs[] = {
+        new TestLocation(37.3456955, -121.9349518, "US", "2605 The Alameda"),
+        new TestLocation(53.9552988220623, -1.0905436441803, "GB",
+            "Nunnery Lane Car Park"),
+        new TestLocation(52.3786, 4.896995, "NL", "Stationsplein"),
+        new TestLocation(45.77466, 4.77867, "FR", "Carrefour Ecully"),
+        new TestLocation(43.3236932607158, 11.3456253706452, "IT",
+            "Estra Toselli Siena"),
+        new TestLocation(58.97014, 5.73365, "NO",
+            "P-Domkirkehallen, Stavanger"),
+        new TestLocation(51.21867, 6.63348, "DE", "Supermarkt Aldi") };
+    for (TestLocation loc : locs) {
+      OpenChargeMapResult result = closestOpenChargeMap(loc.lat, loc.lon,1);
+      Station station = result.closestStation();
+      showStation(station);
+      System.out.println(String.format("%.3f km", result.closestDistance()));
+      assertTrue(result.closestDistance() < 0.01);
+      assertEquals(loc.name, station.getName());
+      assertEquals(loc.lat, station.getLat(), 0.001);
+      assertEquals(loc.lon, station.getLon(), 0.001);
+      assertEquals(loc.country, station.getCountry());
+    }
   }
 
+  @Test
+  public void testClosestStations() {
+    OpenChargeMapResult c = this.closestOpenChargeMap(48.0304, 10.7263,4);
+    assertEquals(4, c.stations.size());
+    for (Entry<Double, Station> se : c.stations.entrySet()) {
+      showStation(se.getValue());
+      System.out.println(String.format("distance: %.3f km", se.getKey()));
+    }
+  }
+
+  @Test
   public void testCheckBundesNetzAgenturAgainsOpenChargeMapApi()
       throws Exception {
     ExcelSystem es = this.getBundesnetzAgenturChargingStations();
     // number of stations to check
-    int limit = 20;
+    int limit = 400;
     es.g().V().has("row").limit(limit).forEachRemaining(basv -> {
       Station bnaStation = this.fromBundesNetzagentur(basv);
       showStation(bnaStation);
       OpenChargeMapResult result = this
-          .closestOpenChargeMap(bnaStation.getLat(), bnaStation.getLon());
-      showStation(result.station);
-      System.out.println(String.format("\tdistance: %.3f km", result.distance));
+          .closestOpenChargeMap(bnaStation.getLat(), bnaStation.getLon(),3);
+      for (Entry<Double, Station> se : result.stations.entrySet()) {
+        showStation(se.getValue());
+        double match = this.getMatch(bnaStation, se.getValue(), se.getKey())
+            * 100.0;
+        System.out.println(String.format("\tmatch: %.2f%% distance: %.3f km",
+            match, se.getKey()));
+      }
     });
+  }
+
+  /**
+   * rate the matching of two stations
+   * 
+   * @param s
+   *          - the original station
+   * @param m
+   *          - the match candidate
+   * @return a matching number which should be close to the percentual
+   *         probability of a match
+   */
+  public double getMatch(Station s, Station m, double distance) {
+    // we start assuming a 100% match and then start "degrading"
+    double match = 1.0;
+    if (distance > 2) {
+      match = match * 0.05; // 5% chance for a match
+    } else if (distance > 1) {
+      match = match * 0.1; // 10% chance for a match
+    } else if (distance > 0.5) {
+      match = match * 0.2; // 20% chance for a match
+    } else if (distance > 0.25) {
+      match = match * 0.4; // 40% chance for a match
+    } else if (distance > 0.125) {
+      match = match * 0.8; // 80% chance for a match (e.g. hotel, company area)
+    }
+    if (!s.getCountry().equals(m.getCountry())) {
+      match = match * 0.1; // 10% chance for a match
+    }
+    if (!s.getZip().equals(m.getZip())) {
+      match = match * 0.5; // only 50% chance for match
+    }
+    if (!s.getAddress().equals(m.getAddress())) {
+      match = match * 0.95; // no big deal - still 95% chance
+    }
+    return match;
   }
 
   /**

@@ -1,3 +1,7 @@
+# Mac files
+*.DS_Store*
+# Excel backup files
+~$*
 # Eclipse settings
 .settings
 # Compiled class file
