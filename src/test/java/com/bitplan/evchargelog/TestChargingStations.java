@@ -395,7 +395,7 @@ public class TestChargingStations {
     ExcelSystem es = this.getBundesnetzAgenturChargingStations();
     // number of stations to check
     int limit = 10;
-    boolean immediatSave=false;
+    boolean immediateSave=false;
     StationManagerImpl.testMode = true;
     StationManager sm = StationManagerImpl.getInstance();
     es.g().V().has("row").limit(limit).forEachRemaining(basv -> {
