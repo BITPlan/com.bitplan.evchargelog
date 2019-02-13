@@ -44,16 +44,18 @@ import com.bitplan.jaxb.JaxbPersistenceApi;
  *
  */
 @XmlRootElement(name = "ChargePeriod")
-@XmlType(propOrder = { "from","to","odo", "chargeMode", "ampere", "RR", "socStart",
-    "socEnd", "kWh", "cost", "url" })
+@XmlType(propOrder = { "from", "to", "odo", "chargeMode", "ampere", "RR",
+    "socStart", "socEnd", "ah", "kWh", "cost", "url" })
 public class ChargePeriodImpl
     implements ChargePeriod, JaxbPersistenceApi<ChargePeriod> {
   protected static Logger LOGGER = Logger.getLogger("com.bitplan.evchargelog");
-  static SimpleDateFormat isoDateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-  static SimpleDateFormat shortIsoDateFormatter = new SimpleDateFormat("dd HH:mm:ss");
-  
-  static boolean debug=false;
-  
+  static SimpleDateFormat isoDateFormatter = new SimpleDateFormat(
+      "yyyy-MM-dd HH:mm:ss");
+  static SimpleDateFormat shortIsoDateFormatter = new SimpleDateFormat(
+      "dd HH:mm:ss");
+
+  static boolean debug = false;
+
   Date from;
   Date to;
   Double odo = 0.0;
@@ -61,6 +63,7 @@ public class ChargePeriodImpl
   Double socStart = 0.0;
   Double socEnd = 100.0;
   Double kWh = 0.0;
+  Double ah = 0.0;
   Double RR = 0.0;
   Double ampere = 0.0;
   String url = "";
@@ -73,7 +76,7 @@ public class ChargePeriodImpl
   public ChargePeriodImpl() {
     init();
   }
-  
+
   /**
    * create a chargePeriod for to isoDate String
    * 
@@ -86,9 +89,9 @@ public class ChargePeriodImpl
     this.to = isoDateFormatter.parse(isoTo);
     init();
   }
-  
+
   public void init() {
-    
+
   }
 
   public Date getFrom() {
@@ -148,11 +151,23 @@ public class ChargePeriodImpl
   }
 
   public Double getkWh() {
+    if (kWh==null)
+      kWh=this.calcKWhours();
     return kWh == null ? 0.0 : kWh;
   }
 
   public void setkWh(Double kWh) {
     this.kWh = kWh;
+  }
+
+  @Override
+  public Double getAh() {
+    return ah == null ? 0.0 : ah;
+  }
+
+  @Override
+  public void setAh(Double Ah) {
+    this.ah = Ah;
   }
 
   public String getUrl() {
@@ -199,12 +214,18 @@ public class ChargePeriodImpl
 
   @Override
   public Double calcKWhours() {
-    // TODO Auto-generated method stub
-    return null;
+    Double kWh = null;
+
+    if (from != null && to != null && ampere != null) {
+      long secs = diffSeconds(from, to);
+      kWh = secs * ampere / 3600.0;
+    }
+    return kWh;
   }
-  
+
   /**
    * get the number of Seconds between to dates
+   * 
    * @param from
    * @param to
    * @return the seconds
@@ -214,7 +235,7 @@ public class ChargePeriodImpl
     long diffSeconds = diff / 1000;
     return diffSeconds;
   }
-  
+
   /**
    * get the number of minutes Difference between two dates
    * 
@@ -223,10 +244,10 @@ public class ChargePeriodImpl
    * @return the minutes
    */
   public static long diffMinutes(Date from, Date to) {
-    long diffMinutes = diffSeconds(from,to)/60;
+    long diffMinutes = diffSeconds(from, to) / 60;
     return diffMinutes;
   }
-  
+
   /**
    * get the duration as Hours and Minutes
    * 
@@ -236,9 +257,11 @@ public class ChargePeriodImpl
     long diffMinutes = diffMinutes(from, to);
     long diffHours = diffMinutes / 60;
     diffMinutes = diffMinutes % 60;
-    String hoursAndMinutes = String.format("%2d h %02d'", diffHours, diffMinutes);
+    String hoursAndMinutes = String.format("%2d h %02d'", diffHours,
+        diffMinutes);
     return hoursAndMinutes;
   }
+
   /**
    * return me as a Date Range
    * 
@@ -257,12 +280,14 @@ public class ChargePeriodImpl
    * @return the string representation
    */
   public static String asDateRange(Date from, Date to) {
-    String result = String.format("%s - %s", isoDateFormatter.format(from), shortIsoDateFormatter.format(to));
+    String result = String.format("%s - %s", isoDateFormatter.format(from),
+        shortIsoDateFormatter.format(to));
     return result;
   }
-  
+
   /**
    * format the from time as isoDate
+   * 
    * @return
    */
   public String getFromString() {
@@ -272,6 +297,7 @@ public class ChargePeriodImpl
 
   /**
    * format the to time as isoDate
+   * 
    * @return
    */
   public String getToString() {
@@ -289,29 +315,42 @@ public class ChargePeriodImpl
         asHoursAndMinutes(), ampere, kWh);
     return result;
   }
-  
+
   /**
    * set my values from the given formParams
+   * 
    * @param formParams
    */
   public void fromMap(MultivaluedMap<String, String> formParams) {
     if (debug) {
-      for (String key:formParams.keySet()) {
-        LOGGER.log(Level.INFO,key+"="+formParams.getFirst(key).toString());
+      for (String key : formParams.keySet()) {
+        LOGGER.log(Level.INFO, key + "=" + formParams.getFirst(key).toString());
       }
     }
-    TypeConverter tc=new DefaultTypeConverter();
-    if (formParams.containsKey("odo")) this.setOdo(tc.getDouble(formParams.getFirst("odo")));
-    if (formParams.containsKey("ampere")) this.setAmpere(tc.getDouble(formParams.getFirst("ampere")));
-    if (formParams.containsKey("from")) this.setFrom(tc.getDate(formParams.getFirst("from")));
-    if (formParams.containsKey("to")) this.setTo(tc.getDate(formParams.getFirst("to")));
-    if (formParams.containsKey("kWh")) this.setkWh(tc.getDouble(formParams.getFirst("kWh")));
-    if (formParams.containsKey("cost")) this.setCost(tc.getDouble(formParams.getFirst("cost")));
-    if (formParams.containsKey("RR")) this.setRR(tc.getDouble(formParams.getFirst("RR")));
-    if (formParams.containsKey("socStart")) this.setSocStart(tc.getDouble(formParams.getFirst("socStart")));
-    if (formParams.containsKey("socEnd")) this.setSocEnd(tc.getDouble(formParams.getFirst("socEnd")));
-    if (formParams.containsKey("url")) this.setUrl(tc.getString(formParams.getFirst("url")));
-    if (formParams.containsKey("chargeMode")) this.setChargeMode(ChargeMode.valueOf(tc.getString(formParams.getFirst("chargeMode"))));
+    TypeConverter tc = new DefaultTypeConverter();
+    if (formParams.containsKey("odo"))
+      this.setOdo(tc.getDouble(formParams.getFirst("odo")));
+    if (formParams.containsKey("ampere"))
+      this.setAmpere(tc.getDouble(formParams.getFirst("ampere")));
+    if (formParams.containsKey("from"))
+      this.setFrom(tc.getDate(formParams.getFirst("from")));
+    if (formParams.containsKey("to"))
+      this.setTo(tc.getDate(formParams.getFirst("to")));
+    if (formParams.containsKey("kWh"))
+      this.setkWh(tc.getDouble(formParams.getFirst("kWh")));
+    if (formParams.containsKey("cost"))
+      this.setCost(tc.getDouble(formParams.getFirst("cost")));
+    if (formParams.containsKey("RR"))
+      this.setRR(tc.getDouble(formParams.getFirst("RR")));
+    if (formParams.containsKey("socStart"))
+      this.setSocStart(tc.getDouble(formParams.getFirst("socStart")));
+    if (formParams.containsKey("socEnd"))
+      this.setSocEnd(tc.getDouble(formParams.getFirst("socEnd")));
+    if (formParams.containsKey("url"))
+      this.setUrl(tc.getString(formParams.getFirst("url")));
+    if (formParams.containsKey("chargeMode"))
+      this.setChargeMode(
+          ChargeMode.valueOf(tc.getString(formParams.getFirst("chargeMode"))));
   }
 
 }

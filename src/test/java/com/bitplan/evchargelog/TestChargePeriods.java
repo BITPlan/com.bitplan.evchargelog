@@ -22,6 +22,7 @@ package com.bitplan.evchargelog;
 
 import static org.junit.Assert.assertEquals;
 import java.io.File;
+import java.text.ParseException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,10 +46,14 @@ public class TestChargePeriods {
     ChargePeriodManager pm = new ChargePeriodManagerImpl();
     ChargePeriod period = new ChargePeriodImpl("2017-02-04 16:00:00",
         "2017-02-05 06:00:00");
-    period.setAmpere(8.0);
+    period.setOdo(13470.0);
+    period.setAmpere(8.0); 
     period.setChargeMode(ChargeMode.AC);
+    period.setRR(5.0);
     period.setkWh(15.2);
+    period.setAh(44.8);
     period.setCost(period.getkWh() * 0.30);
+    period.setUrl("https://www.openstreetmap.org/node/1271476903");
     pm.add(period);
     File xmlFile = File.createTempFile("chargePeriods", ".xml");
     pm.saveAsXML(xmlFile);
@@ -58,7 +63,17 @@ public class TestChargePeriods {
     }
     ChargePeriodManager lpm = ChargePeriodManagerImpl.load(xmlFile);
     assertEquals(1, lpm.getPeriods().size());
+    ChargePeriod period2=lpm.getPeriods().get(0);
+    assertEquals(period2.getAh(),period.getAh(),0.01);
     xmlFile.delete();
+  }
+  
+  @Test
+  public void testCalcKwh() throws ParseException {
+    ChargePeriod period = new ChargePeriodImpl("2019-02-11 05:00:00",
+        "2019-02-11 06:00:00");
+    period.setAmpere(10.0);
+    assertEquals(10.0,period.calcKWhours(),0.01);
   }
 
 

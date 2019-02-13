@@ -33,10 +33,8 @@ import org.junit.Test;
 
 import com.bitplan.datatypes.DefaultTypeConverter;
 import com.bitplan.datatypes.TypeConverter;
-import com.bitplan.evchargelog.resources.EVChargeLogResource;
 import com.bitplan.evchargelog.resources.HelloResource;
 import com.bitplan.rest.User;
-import com.bitplan.rest.basicauth.BasicAuthSecurityProvider;
 import com.bitplan.rest.users.UserImpl;
 import com.sun.jersey.api.client.ClientResponse;
 

@@ -31,7 +31,7 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public interface ChargePeriod {
   public enum ChargeMode {
-    Chademo, AC
+    Chademo, CCS, Type2, Tesla, AC
   };
   
   public ChargeMode getChargeMode();
@@ -50,16 +50,25 @@ public interface ChargePeriod {
   
   public Double getCost();
   public void setCost(Double cost);
+  
   public Double getSocStart();
   public void setSocStart(Double socStart);
+  
   public double getSocEnd();
   public void setSocEnd(double socEnd);
+  
   public Double getkWh();
   public void setkWh(Double kWh);
+  
   public Double getRR();
   public void setRR(Double rR);
+  
+  public Double getAh();
+  public void setAh(Double Ah);
+  
   public String getUrl();
   public void setUrl(String url);
+  
   public Double calcKWhours();
   
   /**

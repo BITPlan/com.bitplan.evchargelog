@@ -1,10 +1,10 @@
 /**
- * Copyright (c) 2016-2019 BITPlan GmbH
+ * Copyright (c) 2019 BITPlan GmbH
  *
  * http://www.bitplan.com
  *
  * This file is part of the Opensource project at:
- * https://github.com/BITPlan/com.bitplan.simplerest
+ * https://github.com/BITPlan/com.bitplan.evchargelog
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
