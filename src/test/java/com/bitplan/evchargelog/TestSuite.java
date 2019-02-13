@@ -24,7 +24,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ TestUsers.class,TestChargePeriods.class, TestRESTServer.class })
+@Suite.SuiteClasses({ TestUsers.class,TestChargingStations.class,TestChargePeriods.class, TestRESTServer.class })
 /**
  * Test suite
  * @author wf

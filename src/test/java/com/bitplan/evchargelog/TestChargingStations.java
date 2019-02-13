@@ -1,10 +1,10 @@
 /**
- * Copyright (c) 2018 BITPlan GmbH
+ * Copyright (c) 2019 BITPlan GmbH
  *
  * http://www.bitplan.com
  *
  * This file is part of the Opensource project at:
- * https://github.com/BITPlan/com.bitplan.simplegraph-tutorial-geo
+ * https://github.com/BITPlan/com.bitplan.evchargelog
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -215,7 +215,8 @@ public class TestChargingStations {
         .ifPresent(value -> station.setLon(((Number) value).doubleValue()));
     sv.property("Postcode")
         .ifPresent(value -> station.setZip(value.toString()));
-    sv.property("Town").ifPresent(value -> station.setCity(value.toString().trim()));
+    sv.property("Town")
+        .ifPresent(value -> station.setCity(value.toString().trim()));
     sv.property("AddressLine1")
         .ifPresent(value -> station.setAddress(value.toString()));
     sv.property("RelatedURL")
@@ -271,10 +272,11 @@ public class TestChargingStations {
    * 
    * @param lat
    * @param lon
-   * @param maxresults 
+   * @param maxresults
    * @return the Station
    */
-  public OpenChargeMapResult closestOpenChargeMap(Double lat, Double lon, int maxresults) {
+  public OpenChargeMapResult closestOpenChargeMap(Double lat, Double lon,
+      int maxresults) {
     String apiUrl = String.format(Locale.ENGLISH,
         "http://api.openchargemap.io/v3/poi/?output=json&latitude=%.4f8&longitude=%.4f&maxresults=%d",
         lat, lon, maxresults);
@@ -365,7 +367,7 @@ public class TestChargingStations {
             "P-Domkirkehallen, Stavanger"),
         new TestLocation(51.21867, 6.63348, "DE", "Supermarkt Aldi") };
     for (TestLocation loc : locs) {
-      OpenChargeMapResult result = closestOpenChargeMap(loc.lat, loc.lon,1);
+      OpenChargeMapResult result = closestOpenChargeMap(loc.lat, loc.lon, 1);
       Station station = result.closestStation();
       showStation(station);
       System.out.println(String.format("%.3f km", result.closestDistance()));
@@ -379,7 +381,7 @@ public class TestChargingStations {
 
   @Test
   public void testClosestStations() {
-    OpenChargeMapResult c = this.closestOpenChargeMap(48.0304, 10.7263,4);
+    OpenChargeMapResult c = this.closestOpenChargeMap(48.0304, 10.7263, 4);
     assertEquals(4, c.stations.size());
     for (Entry<Double, Station> se : c.stations.entrySet()) {
       showStation(se.getValue());
@@ -392,20 +394,33 @@ public class TestChargingStations {
       throws Exception {
     ExcelSystem es = this.getBundesnetzAgenturChargingStations();
     // number of stations to check
-    int limit = 400;
+    int limit = 10;
+    boolean immediatSave=false;
+    StationManagerImpl.testMode = true;
+    StationManager sm = StationManagerImpl.getInstance();
     es.g().V().has("row").limit(limit).forEachRemaining(basv -> {
       Station bnaStation = this.fromBundesNetzagentur(basv);
       showStation(bnaStation);
       OpenChargeMapResult result = this
-          .closestOpenChargeMap(bnaStation.getLat(), bnaStation.getLon(),3);
+          .closestOpenChargeMap(bnaStation.getLat(), bnaStation.getLon(), 3);
       for (Entry<Double, Station> se : result.stations.entrySet()) {
         showStation(se.getValue());
         double match = this.getMatch(bnaStation, se.getValue(), se.getKey())
             * 100.0;
         System.out.println(String.format("\tmatch: %.2f%% distance: %.3f km",
             match, se.getKey()));
+        if (match > 90.0) {
+          sm.add(se.getValue());
+          if (immediateSave)
+          try {
+            sm.save();
+          } catch (Exception e) {
+            ErrorHandler.handle(e);
+          }
+        }
       }
     });
+    sm.save();
   }
 
   /**
