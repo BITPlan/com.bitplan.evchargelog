@@ -394,7 +394,7 @@ public class TestChargingStations {
       throws Exception {
     ExcelSystem es = this.getBundesnetzAgenturChargingStations();
     // number of stations to check
-    int limit = 10;
+    int limit = 8000;
     boolean immediateSave=false;
     StationManagerImpl.testMode = true;
     StationManager sm = StationManagerImpl.getInstance();
